@@ -1,0 +1,8 @@
+# Ignore .DS_Store files created by macOS
+.DS_Store
+
+# Ignore .venv directory
+.venv/
+
+# Ignore dataset_3d directory just for now
+dataset_3d/
