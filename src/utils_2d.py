@@ -30,8 +30,8 @@ def calcAvrImgSize(dataset_url):
         sum_of_widths += w
         sum_of_heights += h
 
-    avr_width = sum_of_widths / len(image_data_dirs)
-    avr_height = sum_of_heights / len(image_data_dirs)
+    avr_width = round(sum_of_widths / len(image_data_dirs))
+    avr_height = round(sum_of_heights / len(image_data_dirs))
 
     return avr_width, avr_height
 

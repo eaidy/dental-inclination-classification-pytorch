@@ -4,11 +4,18 @@ import glob
 import numpy as np
 import pandas as pd
 
+import matplotlib.pyplot as plt
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+
 from torchvision import datasets, transforms
+
+# FRO GRAD - CAM
+import torchvision.transforms.functional as TF
+from PIL import Image
 
 import utils_2d as utils
 
@@ -25,7 +32,7 @@ class ICModel(nn.Module):
         # FULLY CONNECTED LAYERS
         self.fc1 = nn.Linear(136752, 256)
         self.fc2 = nn.Linear(256, 128)
-        self.out = nn.Linear(128, 2)
+        self.out = nn.Linear(128, 3)
 
     def forward(self, x):
         # CONV - 1
@@ -59,11 +66,18 @@ class ICModel(nn.Module):
         criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(self.parameters(), lr=learning_rate)
 
-        optim_width, optim_height = utils.calcAvrImgSize(dataset_dir)
+        optim_width, optim_height = 1250, 1206
 
         data_transforms = transforms.Compose([
             transforms.Resize((optim_width, optim_height)),  # Resize images to average dimensions
             transforms.Grayscale(),
+            transforms.RandomRotation(degrees=20),  # Rotate images randomly up to 20 degrees
+            transforms.RandomHorizontalFlip(p=0.5),  # Flip images horizontally with a probability of 0.5
+            transforms.RandomVerticalFlip(p=0.5),  # Flip images vertically with a probability of 0.5
+            transforms.ColorJitter(brightness=0.2,  # Adjust brightness with a factor of 0.2
+                                   contrast=0.2,  # Adjust contrast with a factor of 0.2
+                                   saturation=0.2,  # Adjust saturation with a factor of 0.2
+                                   hue=0.1),
             transforms.ToTensor(),  # Convert images to PyTorch tensors
             transforms.Normalize(mean=[0.456], std=[0.456])  # Normalize images
         ])
