@@ -21,7 +21,7 @@ def calcAvrImgSize(dataset_url):
     if not (os.path.exists(dataset_url) & os.path.isdir(dataset_url)):
         raise NotADirectoryError(f"{dataset_url} is not a valid directory.")
 
-    image_data_dirs = glob.glob(dataset_url + '/**/*.png', recursive=True)
+    image_data_dirs = glob.glob(dataset_url + '/**/*.*', recursive=True)
     sum_of_heights = 0.0
     sum_of_widths = 0.0
 
@@ -34,4 +34,16 @@ def calcAvrImgSize(dataset_url):
     avr_height = round(sum_of_heights / len(image_data_dirs))
 
     return avr_width, avr_height
+
+def renameFilesAsIndexesInDir(dataset_url):
+    if not (os.path.exists(dataset_url) & os.path.isdir(dataset_url)):
+        raise NotADirectoryError(f"{dataset_url} is not a valid directory!")
+
+    image_data_dirs = glob.glob(dataset_url + '/*.*', recursive=False)
+
+    for index, image_dir in image_data_dirs:
+        try:
+            os.rename(image_dir, dataset_url + f'/{index}.*')
+        except Exception as e:
+            raise e
 

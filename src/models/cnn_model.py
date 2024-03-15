@@ -13,30 +13,23 @@ from torch.utils.data import DataLoader
 
 from torchvision import datasets, transforms
 
-# FRO GRAD - CAM
-import torchvision.transforms.functional as TF
-from PIL import Image
-
-import utils_2d as utils
-
-
 class ICModel(nn.Module):
-
-    def __init__(self):
+    def __init__(self, out_features):
         super().__init__()
 
+        self.out_features = out_features
+
         # CNN
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1)
-        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, stride=1)
-        self.conv3 = nn.Conv2d(128, 256, kernel_size=3, stride=1)
-        self.conv4 = nn.Conv2d(256, 512, kernel_size=3, stride=1)
-        self.conv5 = nn.Conv2d(512, 512, kernel_size=3, stride=1)
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=2)
+        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, stride=2)
+        self.conv3 = nn.Conv2d(128, 256, kernel_size=3, stride=2)
+        self.conv4 = nn.Conv2d(256, 512, kernel_size=3, stride=2)
 
         # FULLY CONNECTED LAYERS
-        self.fc1 = nn.Linear(21727232, 256)
+        self.fc1 = nn.Linear(61952, 256)
         self.fc2 = nn.Linear(256, 64)
-        self.fc3 = nn.Linear(64, 16)
-        self.out = nn.Linear(16, 2)
+        self.out = nn.Linear(64, self.out_features)
+
     def forward(self, x):
         # CONV - 1
         x = F.relu(self.conv1(x))
@@ -49,17 +42,12 @@ class ICModel(nn.Module):
         x = F.max_pool2d(x, kernel_size=3, stride=1)
         # CONV - 4
         x = F.relu(self.conv4(x))
-        x = F.max_pool2d(x, kernel_size=3, stride=1)
-        # CONV - 5
-        x = F.relu(self.conv5(x))
 
-        flattened_size = x.shape[0] * x.shape[1] * x.shape[2] * x.shape[3]
+        x = x.view(x.shape[0], -1)
 
-        x = x.view(-1, flattened_size)
         # FULLY CONNECTED LAYERS
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
         x = self.out(x)
 
         return F.log_softmax(x, dim=1)
@@ -80,9 +68,9 @@ class ICModel(nn.Module):
         optim_width, optim_height = 224, 224
 
         data_transforms = transforms.Compose([
-            transforms.Resize((optim_width, optim_height)),  # Resize images to average dimensions
-            transforms.ToTensor(),  # Convert images to PyTorch tensors
-            transforms.Normalize(mean=[0.456, 0.456, 0.456], std=[0.456, 0.456, 0.456])  # Normalize images
+            transforms.Resize((optim_width, optim_height)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.456, 0.456, 0.456], std=[0.456, 0.456, 0.456])
         ])
 
         dataset = datasets.ImageFolder(root=dataset_dir, transform=data_transforms)
@@ -128,10 +116,9 @@ class ICModel(nn.Module):
         criterion = nn.CrossEntropyLoss()
 
         data_transforms = transforms.Compose([
-            transforms.Resize((optim_width, optim_height)),  # Resize images to average dimensions
-            transforms.Grayscale(),
-            transforms.ToTensor(),  # Convert images to PyTorch tensors
-            transforms.Normalize(mean=[0.456], std=[0.456])  # Normalize images
+            transforms.Resize((optim_width, optim_height)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.456, 0.456, 0.456], std=[0.456, 0.456, 0.456])
         ])
 
         dataset = datasets.ImageFolder(root=dataset_dir, transform=data_transforms)

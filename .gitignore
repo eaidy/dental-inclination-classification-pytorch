@@ -6,3 +6,5 @@
 
 # Ignore dataset_3d directory just for now
 dataset_3d/
+
+dataset_2d_stl
